@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookstore-order-service
+  labels:
+    app: bookstore-order-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookstore-order-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: bookstore-order-service
+    spec:
+      containers:
+      - name: bookstore-order-service
+        image: bagesh2050/bookstore-order-service:0.0.1.RELEASE
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 7004
+        env:
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: username
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: password
+        - name: MONGO_DB
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-conf
+              key: database
+        - name: MONGO_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-conf
+              key: host
+---    
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookstore-order-service-svc
+spec:
+  #type: NodePort
+  selector:
+    app: bookstore-order-service
+  ports:
+  - name: bookstore-order-service
+    #protocol: TCP
+    port: 7004
+    targetPort: 7004
+    #nodePort: 30034
+  clusterIP: None

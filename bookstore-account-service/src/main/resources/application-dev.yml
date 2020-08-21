@@ -1,0 +1,21 @@
+server:
+  port: 7001
+  servlet:    context-path: /account
+
+spring:
+  data:
+    mongodb:
+     uri: mongodb://bookwriteUser:bookAuthWritePass@localhost:27017/bookstore
+     
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      
+# oAuth2 configuration
+auth:
+    server:
+      clientId: BOOKSTORE_V1
+      host: localhost
+      port: 8012
+      context-path: /auth
+    

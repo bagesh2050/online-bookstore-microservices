@@ -1,0 +1,93 @@
+variables:
+  IMAGE_NAME: bagesh2050/bookstore-account-service
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -Dmaven.repo.local=.m2/repository -DinstallAtEnd=true -DdeployAtEnd=true"
+ 
+cache:
+  key: one-key-to-rull-them-all
+  paths:
+    - .m2/repository
+
+stages:
+  - Maven Build
+  - Run Unit Test
+  - variable Setup
+  - Build Docker image
+  - Deploy
+
+.job_template: &job_definition
+  image: docker:19.03.11 
+  services:
+    - docker:19.03.11-dind
+  variables:
+    # Force a better storage driver because we use dind (https://docs.gitlab.com/ce/ci/docker/using_docker_build.html#using-the-overlayfs-driver)
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://docker:2375/
+  dependencies:
+    - set_variables
+  before_script:
+    - export TAG=`cat project_version`
+    - env | grep ^DOCKER_
+    - env | grep ^CI_
+    - docker info
+
+###################################
+##### Stage to SET Variables ######
+###################################
+set_variables:
+  image: maven:3.6.3-jdk-8-slim
+  stage: variable Setup
+  script:
+  - echo `mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec` > project_version
+  artifacts:
+    paths:
+    - project_version
+    - target
+    expire_in: '10m'
+  #when: manual
+  only:
+    - master  
+  
+maven-build-job:
+  image: maven:3.6.3-jdk-8-slim
+  stage: Maven Build
+  script: "mvn $MAVEN_CLI_OPTS package -B"
+  artifacts:
+    paths:
+      - target/*.jar
+  #when: manual
+  only:
+    - master
+
+maven-unit-test-job:
+  image: maven:3.6.3-jdk-8-slim
+  stage: Run Unit Test
+  script:
+    - mvn $MAVEN_CLI_OPTS verify -P all-tests
+  artifacts:
+    paths:
+    - target/site/jacoco-it/
+    - target/site/jacoco-ut/
+  #when: manual
+  only:
+    - master  
+  
+docker-image-build-job:
+  <<: *job_definition
+  stage: Build Docker image
+  script:
+    - echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_USER --password-stdin
+    - docker build -t $IMAGE_NAME:$TAG .
+    - docker push $IMAGE_NAME:$TAG && docker image rm $IMAGE_NAME:$TAG
+  #when: manual
+  only:
+    - master
+    
+deploy-staging:
+  variables:
+    IMAGE_TAG: $TAG
+  stage: Deploy
+  trigger:
+    project: bagesh2050/bookstore-config
+    branch: master
+  only:
+    - master

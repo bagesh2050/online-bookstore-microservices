@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookstore-auth-server
+  labels:
+    app: bookstore-auth-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookstore-auth-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: bookstore-auth-server
+    spec:
+      containers:
+      - name: bookstore-auth-server
+        image: bagesh2050/bookstore-auth-server:0.0.1.RELEASE
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8012
+        env:
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: username
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: password
+        - name: MONGO_DB
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-conf
+              key: database
+        - name: MONGO_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-conf
+              key: host
+---    
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookstore-auth-server-svc
+spec:
+  #type: NodePort
+  selector:
+    app: bookstore-auth-server
+  ports:
+  - name: bookstore-auth-server
+    port: 8012
+    targetPort: 8012
+  clusterIP: None
+    #nodePort: 30040
+    #protocol: TCP

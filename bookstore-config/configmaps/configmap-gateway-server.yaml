@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-server-config-map
+  namespace: default
+data:
+  ACCOUNT_SERVICE_HOST: bookstore-account-service-svc
+  INVENTORY_SERVICE_HOST: bookstore-inventory-service-svc
+  ORDER_SERVICE_HOST: bookstore-order-service-svc

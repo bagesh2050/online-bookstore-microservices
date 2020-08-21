@@ -1,0 +1,15 @@
+server:
+  port: 7004
+  servlet:
+    context-path: /order
+    
+    
+spring:
+    kafka:
+        producer:
+            bootstrap-servers: bookstore-kafka-service:9092
+            key-serializer: org.apache.kafka.common.serialization.StringSerializer
+            value-serializer: org.apache.kafka.common.serialization.StringSerializer
+        template:
+            default-topic: book_order_topic
+    

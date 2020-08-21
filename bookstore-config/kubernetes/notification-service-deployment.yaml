@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookstore-notification-service
+  labels:
+    app: bookstore-notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookstore-notification-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: bookstore-notification-service
+    spec:
+      containers:
+      - name: bookstore-notification-service
+        image: bagesh2050/bookstore-notification-service:0.0.1.RELEASE
+        #imagePullPolicy: Always
+        ports:
+        - containerPort: 7003
+        env:
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: username
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: password
+        - name: MONGO_DB
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-conf
+              key: database
+        - name: MONGO_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-conf
+              key: host
+---    
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookstore-notification-service-svc
+spec:
+  type: NodePort
+  selector:
+    app: bookstore-notification-service
+  ports:
+  - protocol: TCP
+    port: 7003
+    targetPort: 7003
+    nodePort: 30033

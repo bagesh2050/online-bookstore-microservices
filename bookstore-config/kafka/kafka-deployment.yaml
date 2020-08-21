@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  labels:
+    app: bookstore-kafka
+spec:
+  replicas: 1
+  serviceName: "bookstore-kafka-service"
+  selector:
+    matchLabels:
+      app: bookstore-kafka
+  template:
+    metadata:
+      labels:
+        app: bookstore-kafka
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: kafka
+        image: spotify/kafka
+        ports:
+          - containerPort: 9092
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookstore-kafka-service
+spec:
+  ports:
+  - name: kafka
+    port: 9092
+    targetPort: 9092
+  clusterIP: None
+  selector:
+    app: bookstore-kafka

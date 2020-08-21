@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookstore-inventory-service
+  labels:
+    app: bookstore-inventory-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookstore-inventory-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: bookstore-inventory-service
+    spec:
+      containers:
+      - name: bookstore-inventory-service
+        image: bagesh2050/bookstore-inventory-service:0.0.1.RELEASE
+        #imagePullPolicy: Always
+        ports:
+        - containerPort: 7002
+        env:
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: username
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: password
+        - name: MONGO_DB
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-conf
+              key: database
+        - name: MONGO_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-conf
+              key: host
+---    
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookstore-inventory-service-svc
+spec:
+  #type: NodePort
+  selector:
+    app: bookstore-inventory-service
+  ports:
+  - name: bookstore-inventory-service
+    #protocol: TCP
+    port: 7002
+    targetPort: 7002
+    #nodePort: 30032
+  clusterIP: None

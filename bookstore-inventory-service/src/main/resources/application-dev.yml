@@ -1,0 +1,6 @@
+server:  port: 7002  servlet:    context-path: /inventory
+
+spring:
+  data:
+    mongodb:
+     uri: mongodb://bookwriteUser:bookAuthWritePass@localhost:27017/bookstore  security:    oauth2:      resourceserver:        jwt:          key-value: classpath:public.txt              

@@ -1,0 +1,67 @@
+stages:
+  - deploy-account-service
+  - deploy-inventory-service
+  - deploy-order-service
+  - deploy-notification-service
+
+.job_template: &job_definition
+  image: docker:19.03.11 
+  services:
+    - docker:19.03.11-dind
+  variables:
+    # Force a better storage driver because we use dind (https://docs.gitlab.com/ce/ci/docker/using_docker_build.html#using-the-overlayfs-driver)
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://docker:2375/
+    
+
+deploy-account-service-job:
+  stage: deploy-account-service
+  image: dtzar/helm-kubectl
+  script:
+    #- sed -i "s/<VERSION>/${VERSION}/g" deployment.yaml
+    - kubectl apply -f kubernetes/account-service-deployment.yaml
+  environment:
+    name: test
+    url: https://35.188.33.61
+  #when: manual
+  only:
+    - master
+
+deploy-inventory-service-job:
+  stage: deploy-inventory-service
+  image: dtzar/helm-kubectl
+  script:
+    #- sed -i "s/<VERSION>/${VERSION}/g" deployment.yaml
+    - kubectl apply -f kubernetes/inventory-service-deployment.yaml
+  environment:
+    name: test
+    url: https://35.188.33.61
+  #when: manual
+  only:
+    - master
+    
+deploy-order-service-job:
+  stage: deploy-order-service
+  image: dtzar/helm-kubectl
+  script:
+    #- sed -i "s/<VERSION>/${VERSION}/g" deployment.yaml
+    - kubectl apply -f kubernetes/order-service-deployment.yaml
+  environment:
+    name: test
+    url: https://35.188.33.61
+  #when: manual
+  only:
+    - master
+    
+deploy-notification-service-job:
+  stage: deploy-notification-service
+  image: dtzar/helm-kubectl
+  script:
+    #- sed -i "s/<VERSION>/${VERSION}/g" deployment.yaml
+    - kubectl apply -f kubernetes/notification-service-deployment.yaml
+  environment:
+    name: test
+    url: https://35.188.33.61
+  #when: manual
+  only:
+    - master

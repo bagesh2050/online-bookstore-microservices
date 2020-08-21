@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookstore-gateway-service
+  labels:
+    app: bookstore-gateway-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookstore-gateway-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: bookstore-gateway-service
+    spec:
+      containers:
+      - name: bookstore-gateway-service
+        image: bagesh2050/bookstore-gateway-service:0.0.1.RELEASE
+        #imagePullPolicy: Always
+        ports:
+        - containerPort: 7000
+---    
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookstore-gateway-service-svc
+spec:
+  type: NodePort
+  selector:
+    app: bookstore-gateway-service
+  ports:
+  - protocol: TCP
+    port: 7000
+    targetPort: 7000
+    nodePort: 30030
